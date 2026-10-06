@@ -14,6 +14,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
 body{background:#2B3FE0;transition:background-color .7s ease;font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;color:#FFF6E1}
+button{font-family:inherit}
 
 .blob{position:fixed;border-radius:50%;background:rgba(255,246,225,.13);filter:blur(40px);pointer-events:none}
 .b1{width:70vmax;height:70vmax;left:-25vmax;top:-20vmax;animation:drift1 14s ease-in-out infinite alternate}
@@ -21,7 +22,7 @@ body{background:#2B3FE0;transition:background-color .7s ease;font-family:ui-roun
 @keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.2)}}
 @keyframes drift2{to{transform:translate(-20vmax,-18vmax) scale(1.15)}}
 
-#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow:hidden;touch-action:none}
 #word{font-weight:800;line-height:1.08;text-align:center;word-break:normal;max-width:100%;animation:bob 4s ease-in-out infinite alternate}
 @keyframes bob{from{transform:translateY(-6px) rotate(-.6deg)}to{transform:translateY(6px) rotate(.6deg)}}
 .w{display:inline-block;white-space:nowrap}
@@ -31,51 +32,92 @@ body{background:#2B3FE0;transition:background-color .7s ease;font-family:ui-roun
 .ripple{position:fixed;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,246,225,.35);pointer-events:none;animation:rip .65s ease-out forwards}
 @keyframes rip{to{transform:scale(22);opacity:0}}
 
-#hud{position:fixed;top:calc(env(safe-area-inset-top) + 14px);left:20px;right:20px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
-#timer{font-size:24px;font-weight:700;opacity:.9;font-variant-numeric:tabular-nums;transition:transform .2s}
+.flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 100%,rgba(120,255,170,.65),transparent 70%);animation:fl .7s ease-out forwards}
+.flash::after{content:"✓";position:absolute;left:50%;bottom:20%;font-size:22vw;font-weight:800;animation:fly .7s ease-out forwards}
+.flash.skip{background:radial-gradient(circle at 50% 0%,rgba(255,200,120,.6),transparent 70%)}
+.flash.skip::after{content:"↷";bottom:auto;top:20%;animation-name:flyd}
+@keyframes fl{to{opacity:0}}
+@keyframes fly{from{opacity:1;transform:translateX(-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-40vh) scale(1.3)}}
+@keyframes flyd{from{opacity:1;transform:translateX(-50%) scale(.6)}to{opacity:0;transform:translate(-50%,40vh) scale(1.3)}}
+
+#count{display:none;flex-direction:column;align-items:center;gap:18px;text-align:center}
+#count b{font-size:42vw;line-height:1;animation:pop3 .8s cubic-bezier(.2,1.4,.4,1) both}
+#count b.ready{font-size:18vw}
+#count small{font-size:18px;opacity:.9;max-width:80%;line-height:1.4}
+#count small.turn{font-size:32px;font-weight:800;opacity:1}
+@keyframes pop3{from{opacity:0;transform:scale(2.2)}to{opacity:1;transform:none}}
+
+#hud{position:fixed;z-index:1;top:calc(env(safe-area-inset-top) + 14px);left:20px;right:20px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+#timer{min-width:70px;font-size:24px;font-weight:700;opacity:.9;font-variant-numeric:tabular-nums}
 #timer.hot{animation:beat .5s ease-in-out infinite alternate}
 @keyframes beat{to{transform:scale(1.35)}}
-#gear{pointer-events:auto;width:46px;height:46px;border:0;border-radius:50%;background:rgba(255,246,225,.18);color:#FFF6E1;font-size:22px;transition:transform .15s,background .2s}
+#score{display:flex;gap:8px;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;white-space:pre}
+.p{padding:6px 14px;border-radius:999px;background:rgba(255,246,225,.16);opacity:.7;font-size:18px;transition:background .3s,color .3s,opacity .3s,transform .3s}
+.p.on{background:#FFF6E1;color:#1B1F4B;opacity:1;transform:scale(1.06)}
+#gear{pointer-events:auto;width:46px;height:46px;border:0;border-radius:50%;background:rgba(255,246,225,.18);color:#FFF6E1;font-size:22px;transition:transform .15s}
 #gear:active{transform:scale(.88)}
+body.po #gear{pointer-events:none}
 
-#panel{position:fixed;inset:0;background:#FFF6E1;color:#1B1F4B;padding:calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 24px);display:flex;flex-direction:column;gap:22px;overflow:auto;transform:translateY(100%);visibility:hidden;transition:transform .5s cubic-bezier(.2,.9,.25,1),visibility 0s .5s}
-#panel.open{transform:none;visibility:visible;transition:transform .5s cubic-bezier(.2,.9,.25,1),visibility 0s 0s}
-#panel h2{margin:0;font-size:30px}
-.row{display:flex;flex-direction:column;gap:10px;font-weight:600}
-#panel.open h2,#panel.open .row{animation:rise .55s cubic-bezier(.2,.9,.25,1) both}
-#panel.open .row:nth-of-type(1){animation-delay:.08s}
-#panel.open .row:nth-of-type(2){animation-delay:.14s}
-#panel.open .row:nth-of-type(3){animation-delay:.2s}
-@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-.seg{display:flex;gap:8px;flex-wrap:wrap}
-.seg button{flex:1;min-width:22%;padding:14px 10px;border-radius:14px;border:2px solid #2B3FE0;background:transparent;color:#2B3FE0;font:inherit;font-weight:700;transition:background .2s,color .2s,transform .15s}
-.seg button:active{transform:scale(.94)}
-.seg button.on{background:#2B3FE0;color:#FFF6E1}
-#done{margin-top:auto;padding:16px;border:0;border-radius:16px;background:#1B1F4B;color:#FFF6E1;font:inherit;font-weight:800;font-size:18px;transition:transform .15s}
-#done:active{transform:scale(.96)}
+/* ---------- Réglages ---------- */
+#panel{position:fixed;z-index:5;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 10px);display:flex;flex-direction:column;border-radius:30px 30px 0 0;background:rgba(14,16,44,.6);-webkit-backdrop-filter:blur(30px) saturate(1.5);backdrop-filter:blur(30px) saturate(1.5);box-shadow:0 -10px 50px rgba(0,0,0,.25);transform:translateY(105%);visibility:hidden;transition:transform .55s cubic-bezier(.2,.9,.25,1),visibility 0s .55s}
+#panel.open{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.2,.9,.25,1),visibility 0s 0s}
+.grab{width:42px;height:5px;border-radius:3px;background:rgba(255,246,225,.35);margin:10px auto 0;flex:none}
+.phead{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 8px;flex:none}
+.phead h2{margin:0;font-size:32px;font-weight:800}
+#close{width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,246,225,.16);color:#FFF6E1;font-size:16px;transition:transform .15s}
+#close:active{transform:scale(.88)}
+#pbody{flex:1;overflow:auto;padding:8px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.card{background:rgba(255,246,225,.09);border:1px solid rgba(255,246,225,.12);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px}
+#panel.open .card,#panel.open #reset{animation:rise .6s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--k)*.06s + .12s)}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.t{font-weight:700;font-size:17px}
+.hint{margin:0;font-size:14px;line-height:1.4;opacity:.7}
+.hint:empty{display:none}
+.hint.warn{opacity:1;color:#FFC59A}
+.line{display:flex;justify-content:space-between;align-items:center;gap:14px}
+.line + .line{padding-top:12px;border-top:1px solid rgba(255,246,225,.12)}
+.line .hint{margin-top:3px}
 
-#end{display:none;flex-direction:column;align-items:center;gap:10px;text-align:center}
-#end.show{display:flex;animation:shake .7s ease both}
-#end b{font-size:12vw}
-#end small{font-size:20px;opacity:.85}
-@keyframes shake{0%{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.1) rotate(2deg)}60%{transform:scale(.96) rotate(-2deg)}100%{transform:none}}
+.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:4px;border-radius:16px;background:rgba(0,0,0,.28)}
+.seg .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/var(--n));border-radius:12px;background:#FFF6E1;box-shadow:0 2px 10px rgba(0,0,0,.25);transform:translateX(calc(var(--i)*100%));transition:transform .4s cubic-bezier(.2,1.2,.3,1)}
+.seg button{position:relative;z-index:1;border:0;background:transparent;color:rgba(255,246,225,.85);padding:11px 4px;font-size:16px;font-weight:700;transition:color .3s}
+.seg button.on{color:#1B1F4B}
 
-#hl{position:fixed;left:-100px;top:-100px;opacity:0;pointer-events:none}
+.sw{flex:none;width:56px;height:34px;border:0;border-radius:999px;position:relative;background:rgba(255,246,225,.22);transition:background .3s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#FFF6E1;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .35s cubic-bezier(.2,1.4,.4,1)}
+.sw[aria-pressed=true]{background:#34D17E}
+.sw[aria-pressed=true]::after{transform:translateX(22px)}
+
+#reset{padding:15px;border-radius:18px;border:1px solid rgba(255,246,225,.2);background:transparent;color:#FFF6E1;font-size:16px;font-weight:700;transition:transform .15s,background .2s}
+#reset:active{transform:scale(.97);background:rgba(255,246,225,.12)}
+.pfoot{flex:none;padding:10px 18px calc(env(safe-area-inset-bottom) + 16px)}
+#done{width:100%;padding:17px;border:0;border-radius:20px;background:#FFF6E1;color:#1B1F4B;font-size:19px;font-weight:800;transition:transform .15s}
+#done:active{transform:scale(.97)}
+
+#hl{display:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="blob b1"></div><div class="blob b2"></div>
-<div id="stage"><div id="word"></div><div id="end"><b>Temps écoulé</b><small>Touche pour rejouer</small></div></div>
-<div id="hud"><div id="timer"></div><button id="gear" aria-label="Paramètres">⚙︎</button></div>
-<label id="hl"><input type="checkbox" switch id="hs"></label>
+<div id="stage"><div id="word"></div><div id="count"></div></div>
+<div id="hud"><div id="timer"></div><div id="score"></div><button id="gear" aria-label="Réglages">⚙︎</button></div>
 
-<div id="panel">
-  <h2>Paramètres</h2>
-  <div class="row">Difficulté<div class="seg" id="lvl"></div></div>
-  <div class="row">Minuteur<div class="seg" id="tmr"></div></div>
-  <div class="row">Vibrations<div class="seg" id="hap"></div></div>
-  <button id="done">Jouer</button>
+<div id="panel" role="dialog" aria-label="Réglages">
+  <div class="grab"></div>
+  <div class="phead"><h2>Réglages</h2><button id="close" aria-label="Fermer">✕</button></div>
+  <div id="pbody">
+    <section class="card" style="--k:0"><div class="t">Mode de jeu</div><div class="seg" id="mode"></div><p class="hint" id="modeHint"></p></section>
+    <section class="card" style="--k:1"><div class="t">Difficulté</div><div class="seg" id="lvl"></div></section>
+    <section class="card" style="--k:2"><div class="t">Minuteur</div><div class="seg" id="tmr"></div><p class="hint" id="tmrHint"></p></section>
+    <section class="card" style="--k:3">
+      <div class="line"><div><div class="t">Inclinaison</div><p class="hint">Penche vers le bas = trouvé, vers le haut = passer</p></div><button class="sw" id="tilt" aria-label="Inclinaison"></button></div>
+      <p class="hint warn" id="tiltMsg"></p>
+      <div class="line"><div class="t">Vibrations</div><button class="sw" id="hap" aria-label="Vibrations"></button></div>
+    </section>
+    <button id="reset" style="--k:4">Remettre les scores à zéro</button>
+  </div>
+  <div class="pfoot"><button id="done">Reprendre</button></div>
 </div>
 
 <script>
@@ -101,18 +143,38 @@ difficile:["j'ai faim","tu as vu","où est mon portable","il fait froid","passe-
 "je vais bien merci","et toi","enchanté","ravi de te rencontrer","comment tu t'appelles","tu habites où","tu fais quoi dans la vie","c'est un secret","promis juré","je te le jure","c'est faux","c'est vrai","peut-être","jamais de la vie","bien sûr que oui","absolument pas","ça dépend","on verra bien",
 "c'est la fête","joyeux anniversaire","souffle les bougies","fais un vœu","aïe ça fait mal","j'ai le hoquet","à tes souhaits","j'ai peur","c'est un cauchemar","j'ai fait un rêve","c'est trop tard","laisse tomber"]
 };
-const DEF={lvl:"facile",tmr:0,hap:1};
+const DEF={lvl:"facile",tmr:0,hap:1,tilt:0,mode:"solo"};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem("levres2")||"{}"))}catch(e){S={...DEF}}
 if(!WORDS[S.lvl])S.lvl="facile";
+if(S.mode!=="duel")S.mode="solo";
 const save=()=>{try{localStorage.setItem("levres2",JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
 const COLORS=["#2B3FE0","#E0356B","#0E9F6E","#F26B1D","#7B3FE4","#0891B2","#C2410C","#BE185D"];
-let deck=[],t=null,left=0,over=false,ci=0,last="";
+let deck=[],t=null,cd=null,left=0,phase="ready",ci=0,last="",found=0,skipped=0,sc=[0,0],cur=0,
+    swiped=false,wl=null,sx=0,sy=0,paused=false,armed=false,listening=false,hLabel=null;
+const dur=()=>S.mode==="duel"?(S.tmr||60):S.tmr;
 
+/* ---- vibrations (iOS : astuce de l'interrupteur) ---- */
+function initHaptic(){
+  const input=document.createElement("input");
+  input.type="checkbox";input.id="haptic-switch";input.setAttribute("switch","");
+  input.style.cssText="position:fixed;left:-200px;top:0;opacity:0;pointer-events:none";
+  hLabel=document.createElement("label");
+  hLabel.htmlFor="haptic-switch";hLabel.style.display="none";
+  document.body.append(input,hLabel);
+}
 function haptic(){
   if(!S.hap)return;
-  try{ if(navigator.vibrate){navigator.vibrate(15);return} $("hl").click(); }catch(e){}
+  try{ if(navigator.vibrate){navigator.vibrate(15);return} if(hLabel)hLabel.click(); }catch(e){}
 }
+
+/* ---- écran allumé ---- */
+async function lockScreen(){
+  try{ if("wakeLock" in navigator){ wl=await navigator.wakeLock.request("screen"); wl.addEventListener("release",()=>{wl=null}); } }catch(e){ wl=null }
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible")lockScreen() });
+
+/* ---- mots ---- */
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function recolor(){
   ci=(ci+1+Math.floor(Math.random()*(COLORS.length-1)))%COLORS.length;
@@ -136,54 +198,196 @@ function next(){
   last=deck.pop();
   show(last);recolor();
 }
+
+/* ---- score ---- */
+function renderScore(){
+  const el=$("score");
+  if(S.mode==="duel"){
+    el.innerHTML=[0,1].map(i=>'<span class="p'+(cur===i?" on":"")+'">J'+(i+1)+' <b>'+sc[i]+'</b></span>').join("");
+  }else el.textContent=(found||skipped)?"✓ "+found+"   ↷ "+skipped:"";
+}
+function bump(){$("score").animate([{transform:"scale(1.3)"},{transform:"none"}],{duration:300,easing:"ease-out"})}
+function resetScores(){found=0;skipped=0;sc=[0,0];cur=0;renderScore()}
+
+/* ---- minuteur / tours ---- */
+function draw(){$("timer").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}
 function startTimer(){
-  clearInterval(t);over=false;
-  $("end").classList.remove("show");$("word").style.display="";
-  $("timer").className="";
-  if(!S.tmr){$("timer").textContent="";return}
-  left=S.tmr;draw();
+  clearInterval(t);$("timer").className="";
+  const d=dur();
+  if(!d){$("timer").textContent="";return}
+  left=d;draw();
   t=setInterval(()=>{
     left--;draw();
     if(left<=5&&left>0)$("timer").className="hot";
-    if(left<=0){
-      clearInterval(t);over=true;$("timer").className="";
-      $("word").style.display="none";$("end").classList.add("show");
-      haptic();setTimeout(haptic,150);
-    }
+    if(left<=0)timerEnd();
   },1000);
 }
-function draw(){$("timer").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}
-function newGame(){deck=[];startTimer();next()}
+function timerEnd(){
+  clearInterval(t);haptic();setTimeout(haptic,150);
+  if(S.mode==="duel"){cur=1-cur;startGame("Au tour de J"+(cur+1));return}
+  $("timer").className="hot";
+}
+function hintText(){
+  return S.tilt?"Penche vers le bas = trouvé · vers le haut = passer":"Tap = passer · Swipe vers le haut = trouvé";
+}
+function showCount(n,msg){
+  $("count").innerHTML=(msg?'<small class="turn">'+msg+'</small>':"")+"<b>"+n+"</b><small>Mets le téléphone sur ton front<br>"+hintText()+"</small>";
+  haptic();
+}
+function showReady(){
+  phase="ready";clearInterval(t);clearInterval(cd);
+  $("word").style.display="none";$("timer").textContent="";$("timer").className="";
+  $("count").style.display="flex";
+  $("count").innerHTML='<b class="ready">Prêt ?</b><small>Touche l\'écran pour commencer</small>';
+  renderScore();
+}
+function startGame(msg){
+  clearInterval(t);clearInterval(cd);
+  deck=[];phase="count";armed=false;renderScore();
+  $("word").style.display="none";$("timer").textContent="";$("timer").className="";
+  $("count").style.display="flex";
+  let n=3;showCount(n,msg);lockScreen();
+  cd=setInterval(()=>{
+    n--;
+    if(n>0){showCount(n,msg);return}
+    clearInterval(cd);$("count").style.display="none";$("word").style.display="";
+    phase="play";armed=false;startTimer();next();
+  },1000);
+}
+function resume(){
+  clearInterval(cd);$("count").style.display="none";$("word").style.display="";
+  deck=[];phase="play";armed=false;startTimer();next();
+}
 
+/* ---- actions ---- */
+function flash(skip){
+  const f=document.createElement("div");f.className="flash"+(skip?" skip":"");
+  f.addEventListener("animationend",e=>{if(e.target===f)f.remove()});
+  document.body.appendChild(f);
+}
+function foundWord(){
+  if(S.mode==="duel")sc[cur]++;else found++;
+  renderScore();bump();
+  haptic();setTimeout(haptic,90);
+  flash(false);next();
+}
+function skipWord(viaTilt){
+  skipped++;
+  if(S.mode!=="duel")renderScore();
+  if(viaTilt){haptic();flash(true)}
+  next();
+}
+
+/* ---- inclinaison ---- */
+function onTilt(e){
+  if(!S.tilt||phase!=="play")return;
+  const b=e.beta;if(b==null)return;
+  if(armed){
+    if(b>125){armed=false;foundWord()}
+    else if(b<50){armed=false;skipWord(true)}
+  }else if(b>70&&b<110)armed=true;
+}
+async function enableTilt(){
+  try{
+    if(typeof DeviceOrientationEvent==="undefined")return false;
+    if(typeof DeviceOrientationEvent.requestPermission==="function"){
+      const r=await DeviceOrientationEvent.requestPermission();
+      if(r!=="granted")return false;
+    }
+    if(!listening){window.addEventListener("deviceorientation",onTilt);listening=true}
+    return true;
+  }catch(e){return false}
+}
+
+/* ---- gestes ---- */
+$("stage").addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY});
+$("stage").addEventListener("pointerup",e=>{
+  const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(phase==="play"&&dy<-70&&Math.abs(dy)>Math.abs(dx)*1.3){
+    swiped=true;setTimeout(()=>{swiped=false},250);foundWord();
+  }
+});
 $("stage").addEventListener("click",e=>{
+  if(swiped){swiped=false;return}
   const r=document.createElement("div");r.className="ripple";
   r.style.left=e.clientX+"px";r.style.top=e.clientY+"px";
   r.addEventListener("animationend",()=>r.remove());
   document.body.appendChild(r);
   haptic();
-  if(over){newGame();return}
-  next();
+  if(!wl)lockScreen();
+  if(phase==="ready"){ (async()=>{ if(S.tilt)await enableTilt(); startGame(); })(); return }
+  if(phase!=="play")return;
+  skipWord(false);
 });
-$("gear").addEventListener("click",e=>{
-  e.stopPropagation();haptic();
-  $("gear").animate([{transform:"rotate(0)"},{transform:"rotate(180deg)"}],{duration:400,easing:"ease-out"});
-  clearInterval(t);$("panel").classList.add("open");
-});
-$("done").addEventListener("click",()=>{haptic();$("panel").classList.remove("open");newGame()});
 
-function seg(id,opts,key){
-  const box=$(id);box.innerHTML="";
-  opts.forEach(([label,val])=>{
-    const b=document.createElement("button");b.textContent=label;
-    if(S[key]===val)b.className="on";
-    b.onclick=()=>{S[key]=val;save();haptic();seg(id,opts,key)};
-    box.appendChild(b);
-  });
+/* ---- réglages ---- */
+function openPanel(){
+  haptic();
+  $("gear").animate([{transform:"rotate(0)"},{transform:"rotate(180deg)"}],{duration:400,easing:"ease-out"});
+  paused=(phase==="play");if(paused)phase="paused";
+  clearInterval(t);clearInterval(cd);
+  document.body.classList.add("po");$("panel").classList.add("open");
 }
+function closePanel(){
+  haptic();
+  document.body.classList.remove("po");$("panel").classList.remove("open");
+  if(S.tilt)enableTilt();
+  if(paused){paused=false;resume()}
+  else if(phase==="ready")showReady();
+  else startGame();
+}
+$("gear").addEventListener("click",e=>{e.stopPropagation();openPanel()});
+$("done").addEventListener("click",closePanel);
+$("close").addEventListener("click",closePanel);
+$("reset").addEventListener("click",()=>{haptic();resetScores();$("reset").animate([{transform:"scale(.94)"},{transform:"none"}],{duration:250})});
+
+function seg(id,opts,key,onChange){
+  const box=$(id);box.innerHTML="";box.style.setProperty("--n",opts.length);
+  const th=document.createElement("i");th.className="thumb";box.appendChild(th);
+  const btns=opts.map(([label,val])=>{
+    const b=document.createElement("button");b.textContent=label;
+    b.onclick=()=>{S[key]=val;save();haptic();paint();if(onChange)onChange()};
+    box.appendChild(b);return b;
+  });
+  function paint(){
+    const i=Math.max(0,opts.findIndex(o=>o[1]===S[key]));
+    box.style.setProperty("--i",i);
+    btns.forEach((b,j)=>b.classList.toggle("on",j===i));
+  }
+  paint();
+}
+function sw(id,key,handler){
+  const b=$(id);
+  const paint=()=>b.setAttribute("aria-pressed",S[key]?"true":"false");
+  paint();
+  b.onclick=async()=>{
+    if(handler){const ok=await handler(!S[key]);if(!ok){paint();return}}
+    else S[key]=S[key]?0:1;
+    save();haptic();paint();
+  };
+}
+function refreshHints(){
+  $("modeHint").textContent=S.mode==="duel"?"Deux joueurs, un tour chacun. Les deux scores s'affichent en haut.":"Un seul joueur, avec le compteur trouvé / passé.";
+  $("tmrHint").textContent=(S.mode==="duel"&&!S.tmr)?"En duel, chaque tour dure 60 s minimum.":"";
+}
+seg("mode",[["Solo","solo"],["Duel","duel"]],"mode",()=>{resetScores();refreshHints()});
 seg("lvl",[["Facile","facile"],["Difficile","difficile"]],"lvl");
-seg("tmr",[["Sans",0],["30 s",30],["60 s",60],["90 s",90]],"tmr");
-seg("hap",[["Oui",1],["Non",0]],"hap");
-newGame();
+seg("tmr",[["Sans",0],["30 s",30],["60 s",60],["90 s",90]],"tmr",refreshHints);
+sw("tilt","tilt",async want=>{
+  if(!want){S.tilt=0;$("tiltMsg").textContent="";return true}
+  const ok=await enableTilt();
+  $("tiltMsg").textContent=ok?"":"Permission refusée ou capteur indisponible. Ferme complètement l'app puis réessaie.";
+  if(ok)S.tilt=1;
+  return ok;
+});
+sw("hap","hap");
+refreshHints();
+
+initHaptic();
+if(S.tilt&&typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission!=="function"){
+  window.addEventListener("deviceorientation",onTilt);listening=true;
+}
+showReady();
 </script>
 </body>
 </html>
