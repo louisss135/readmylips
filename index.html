@@ -22,7 +22,7 @@ button{font-family:inherit}
 @keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.2)}}
 @keyframes drift2{to{transform:translate(-20vmax,-18vmax) scale(1.15)}}
 
-#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow:hidden;touch-action:none}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) calc(env(safe-area-inset-right) + 24px) env(safe-area-inset-bottom) calc(env(safe-area-inset-left) + 24px);overflow:hidden;touch-action:none}
 #word{font-weight:800;line-height:1.08;text-align:center;word-break:normal;max-width:100%;animation:bob 4s ease-in-out infinite alternate}
 @keyframes bob{from{transform:translateY(-6px) rotate(-.6deg)}to{transform:translateY(6px) rotate(.6deg)}}
 .w{display:inline-block;white-space:nowrap}
@@ -33,7 +33,7 @@ button{font-family:inherit}
 @keyframes rip{to{transform:scale(22);opacity:0}}
 
 .flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 100%,rgba(120,255,170,.65),transparent 70%);animation:fl .7s ease-out forwards}
-.flash::after{content:"✓";position:absolute;left:50%;bottom:20%;font-size:22vw;font-weight:800;animation:fly .7s ease-out forwards}
+.flash::after{content:"✓";position:absolute;left:50%;bottom:20%;font-size:min(22vw,40vh);font-weight:800;animation:fly .7s ease-out forwards}
 .flash.skip{background:radial-gradient(circle at 50% 0%,rgba(255,200,120,.6),transparent 70%)}
 .flash.skip::after{content:"↷";bottom:auto;top:20%;animation-name:flyd}
 @keyframes fl{to{opacity:0}}
@@ -41,13 +41,13 @@ button{font-family:inherit}
 @keyframes flyd{from{opacity:1;transform:translateX(-50%) scale(.6)}to{opacity:0;transform:translate(-50%,40vh) scale(1.3)}}
 
 #count{display:none;flex-direction:column;align-items:center;gap:18px;text-align:center}
-#count b{font-size:42vw;line-height:1;animation:pop3 .8s cubic-bezier(.2,1.4,.4,1) both}
-#count b.ready{font-size:18vw}
-#count small{font-size:18px;opacity:.9;max-width:80%;line-height:1.4}
+#count b{font-size:min(42vw,46vh);line-height:1;animation:pop3 .8s cubic-bezier(.2,1.4,.4,1) both}
+#count b.ready{font-size:min(18vw,26vh)}
+#count small{font-size:18px;opacity:.9;max-width:92%;line-height:1.4}
 #count small.turn{font-size:32px;font-weight:800;opacity:1}
 @keyframes pop3{from{opacity:0;transform:scale(2.2)}to{opacity:1;transform:none}}
 
-#hud{position:fixed;z-index:1;top:calc(env(safe-area-inset-top) + 14px);left:20px;right:20px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+#hud{position:fixed;z-index:1;top:calc(env(safe-area-inset-top) + 14px);left:calc(env(safe-area-inset-left) + 20px);right:calc(env(safe-area-inset-right) + 20px);display:flex;justify-content:space-between;align-items:center;pointer-events:none}
 #timer{min-width:70px;font-size:24px;font-weight:700;opacity:.9;font-variant-numeric:tabular-nums}
 #timer.hot{animation:beat .5s ease-in-out infinite alternate}
 @keyframes beat{to{transform:scale(1.35)}}
@@ -59,7 +59,7 @@ button{font-family:inherit}
 body.po #gear{pointer-events:none}
 
 /* ---------- Réglages ---------- */
-#panel{position:fixed;z-index:5;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 10px);display:flex;flex-direction:column;border-radius:30px 30px 0 0;background:rgba(14,16,44,.6);-webkit-backdrop-filter:blur(30px) saturate(1.5);backdrop-filter:blur(30px) saturate(1.5);box-shadow:0 -10px 50px rgba(0,0,0,.25);transform:translateY(105%);visibility:hidden;transition:transform .55s cubic-bezier(.2,.9,.25,1),visibility 0s .55s}
+#panel{position:fixed;z-index:5;left:env(safe-area-inset-left);right:env(safe-area-inset-right);max-width:680px;margin:0 auto;bottom:0;top:calc(env(safe-area-inset-top) + 10px);display:flex;flex-direction:column;border-radius:30px 30px 0 0;background:rgba(14,16,44,.6);-webkit-backdrop-filter:blur(30px) saturate(1.5);backdrop-filter:blur(30px) saturate(1.5);box-shadow:0 -10px 50px rgba(0,0,0,.25);transform:translateY(105%);visibility:hidden;transition:transform .55s cubic-bezier(.2,.9,.25,1),visibility 0s .55s}
 #panel.open{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.2,.9,.25,1),visibility 0s 0s}
 .grab{width:42px;height:5px;border-radius:3px;background:rgba(255,246,225,.35);margin:10px auto 0;flex:none}
 .phead{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 8px;flex:none}
@@ -94,6 +94,27 @@ body.po #gear{pointer-events:none}
 #done{width:100%;padding:17px;border:0;border-radius:20px;background:#FFF6E1;color:#1B1F4B;font-size:19px;font-weight:800;transition:transform .15s}
 #done:active{transform:scale(.97)}
 
+@media (orientation:landscape) and (max-height:600px){
+  #panel{top:6px;max-width:none;border-radius:24px 24px 0 0}
+  .grab{margin-top:6px}
+  .phead{padding:8px 24px 4px}
+  .phead h2{font-size:26px}
+  #close{display:none}
+  .pfoot{position:absolute;top:12px;right:20px;padding:0}
+  #done{width:auto;padding:11px 28px;font-size:16px;border-radius:16px}
+  #pbody{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start;padding:6px 20px calc(env(safe-area-inset-bottom) + 12px)}
+  #pbody>:nth-child(4){grid-column:span 2}
+  #pbody>:nth-child(5){align-self:end}
+  .card{padding:12px 14px;gap:8px;border-radius:18px}
+  .t{font-size:16px}
+  .hint{font-size:13px}
+  #modeHint{display:none}
+  .seg button{padding:8px 2px;font-size:15px}
+  #reset{padding:12px;font-size:15px}
+  #count{gap:8px}
+  #count small.turn{font-size:26px}
+  #count small{font-size:16px}
+}
 #hl{display:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -111,7 +132,7 @@ body.po #gear{pointer-events:none}
     <section class="card" style="--k:1"><div class="t">Difficulté</div><div class="seg" id="lvl"></div></section>
     <section class="card" style="--k:2"><div class="t">Minuteur</div><div class="seg" id="tmr"></div><p class="hint" id="tmrHint"></p></section>
     <section class="card" style="--k:3">
-      <div class="line"><div><div class="t">Inclinaison</div><p class="hint">Penche vers le bas = trouvé, vers le haut = passer</p></div><button class="sw" id="tilt" aria-label="Inclinaison"></button></div>
+      <div class="line"><div><div class="t">Inclinaison</div><p class="hint">Penche vers le bas = trouvé, vers le haut = passer (portrait ou paysage)</p></div><button class="sw" id="tilt" aria-label="Inclinaison"></button></div>
       <p class="hint warn" id="tiltMsg"></p>
       <div class="line"><div class="t">Vibrations</div><button class="sw" id="hap" aria-label="Vibrations"></button></div>
     </section>
@@ -190,9 +211,18 @@ function show(w){
     el.appendChild(wrap);
     if(k<arr.length-1)el.appendChild(document.createTextNode(" "));
   });
-  const n=w.length;
-  el.style.fontSize=(n>14?14*0.6:n>8?14*0.78:14)+"vw";
+  fitWord();
 }
+function fitWord(){
+  const el=$("word");if(!el.firstChild)return;
+  const W=innerWidth,H=innerHeight;
+  let s=Math.min(W*0.14,H*0.2),g=0;
+  el.style.fontSize=s+"px";
+  while(g++<40&&s>16&&(el.scrollWidth>el.clientWidth+8||el.offsetHeight>H*0.7||el.offsetHeight/(s*1.08)>3.4)){
+    s*=0.93;el.style.fontSize=s+"px";
+  }
+}
+addEventListener("resize",()=>{ if($("word").style.display!=="none")fitWord() });
 function next(){
   if(!deck.length){deck=shuffle([...WORDS[S.lvl]]);if(deck[deck.length-1]===last)deck.reverse()}
   last=deck.pop();
@@ -281,11 +311,13 @@ function skipWord(viaTilt){
 /* ---- inclinaison ---- */
 function onTilt(e){
   if(!S.tilt||phase!=="play")return;
-  const b=e.beta;if(b==null)return;
+  if(e.beta==null||e.gamma==null)return;
+  const r=Math.PI/180;
+  const v=Math.cos(e.beta*r)*Math.cos(e.gamma*r); /* +1 écran vers le plafond, -1 vers le sol */
   if(armed){
-    if(b>125){armed=false;foundWord()}
-    else if(b<50){armed=false;skipWord(true)}
-  }else if(b>70&&b<110)armed=true;
+    if(v<-0.55){armed=false;foundWord()}
+    else if(v>0.55){armed=false;skipWord(true)}
+  }else if(Math.abs(v)<0.3)armed=true;
 }
 async function enableTilt(){
   try{
