@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lèvres">
+<meta name="theme-color" content="#2B3FE0" id="tc">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Lèvres</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:#2B3FE0;transition:background-color .7s ease;font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;color:#FFF6E1}
+
+.blob{position:fixed;border-radius:50%;background:rgba(255,246,225,.13);filter:blur(40px);pointer-events:none}
+.b1{width:70vmax;height:70vmax;left:-25vmax;top:-20vmax;animation:drift1 14s ease-in-out infinite alternate}
+.b2{width:60vmax;height:60vmax;right:-25vmax;bottom:-20vmax;animation:drift2 17s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.2)}}
+@keyframes drift2{to{transform:translate(-20vmax,-18vmax) scale(1.15)}}
+
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow:hidden}
+#word{font-weight:800;line-height:1.08;text-align:center;word-break:normal;max-width:100%;animation:bob 4s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(-6px) rotate(-.6deg)}to{transform:translateY(6px) rotate(.6deg)}}
+.w{display:inline-block;white-space:nowrap}
+.c{display:inline-block;animation:pop .6s cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--i)*22ms)}
+@keyframes pop{from{opacity:0;transform:translateY(.6em) scale(.4) rotate(-12deg)}to{opacity:1;transform:none}}
+
+.ripple{position:fixed;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,246,225,.35);pointer-events:none;animation:rip .65s ease-out forwards}
+@keyframes rip{to{transform:scale(22);opacity:0}}
+
+#hud{position:fixed;top:calc(env(safe-area-inset-top) + 14px);left:20px;right:20px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+#timer{font-size:24px;font-weight:700;opacity:.9;font-variant-numeric:tabular-nums;transition:transform .2s}
+#timer.hot{animation:beat .5s ease-in-out infinite alternate}
+@keyframes beat{to{transform:scale(1.35)}}
+#gear{pointer-events:auto;width:46px;height:46px;border:0;border-radius:50%;background:rgba(255,246,225,.18);color:#FFF6E1;font-size:22px;transition:transform .15s,background .2s}
+#gear:active{transform:scale(.88)}
+
+#panel{position:fixed;inset:0;background:#FFF6E1;color:#1B1F4B;padding:calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 24px);display:flex;flex-direction:column;gap:22px;overflow:auto;transform:translateY(100%);visibility:hidden;transition:transform .5s cubic-bezier(.2,.9,.25,1),visibility 0s .5s}
+#panel.open{transform:none;visibility:visible;transition:transform .5s cubic-bezier(.2,.9,.25,1),visibility 0s 0s}
+#panel h2{margin:0;font-size:30px}
+.row{display:flex;flex-direction:column;gap:10px;font-weight:600}
+#panel.open h2,#panel.open .row{animation:rise .55s cubic-bezier(.2,.9,.25,1) both}
+#panel.open .row:nth-of-type(1){animation-delay:.08s}
+#panel.open .row:nth-of-type(2){animation-delay:.14s}
+#panel.open .row:nth-of-type(3){animation-delay:.2s}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:22%;padding:14px 10px;border-radius:14px;border:2px solid #2B3FE0;background:transparent;color:#2B3FE0;font:inherit;font-weight:700;transition:background .2s,color .2s,transform .15s}
+.seg button:active{transform:scale(.94)}
+.seg button.on{background:#2B3FE0;color:#FFF6E1}
+#done{margin-top:auto;padding:16px;border:0;border-radius:16px;background:#1B1F4B;color:#FFF6E1;font:inherit;font-weight:800;font-size:18px;transition:transform .15s}
+#done:active{transform:scale(.96)}
+
+#end{display:none;flex-direction:column;align-items:center;gap:10px;text-align:center}
+#end.show{display:flex;animation:shake .7s ease both}
+#end b{font-size:12vw}
+#end small{font-size:20px;opacity:.85}
+@keyframes shake{0%{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.1) rotate(2deg)}60%{transform:scale(.96) rotate(-2deg)}100%{transform:none}}
+
+#hl{position:fixed;left:-100px;top:-100px;opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div id="stage"><div id="word"></div><div id="end"><b>Temps écoulé</b><small>Touche pour rejouer</small></div></div>
+<div id="hud"><div id="timer"></div><button id="gear" aria-label="Paramètres">⚙︎</button></div>
+<label id="hl"><input type="checkbox" switch id="hs"></label>
+
+<div id="panel">
+  <h2>Paramètres</h2>
+  <div class="row">Difficulté<div class="seg" id="lvl"></div></div>
+  <div class="row">Minuteur<div class="seg" id="tmr"></div></div>
+  <div class="row">Vibrations<div class="seg" id="hap"></div></div>
+  <button id="done">Jouer</button>
+</div>
+
+<script>
+const WORDS={
+facile:["mamie","football","ordinateur","téléphone","boulanger","anniversaire","champagne","restaurant","aéroport","montagne","chaussette","fromage râpé","bonne nuit","je t'aime","tu viens","bon appétit","pas de souci","c'est parti","on y va","à demain","grand-père","spaghetti","brouillard","chewing-gum","salade","feu d'artifice","machine à laver","pain au chocolat","dentiste","pistache",
+"tracteur","camion","hélicoptère","escargot","éléphant","girafe","crocodile","kangourou","papillon","hérisson","pingouin","dauphin","requin","tortue","grenouille","cochon","vache","mouton","cheval","poulet",
+"framboise","fraise","ananas","pastèque","citron","orange","poire","cerise","abricot","raisin","concombre","carotte","tomate","champignon","pomme de terre","omelette","croissant","crêpe","glace","bonbon",
+"brosse à dents","savon","serviette","oreiller","canapé","frigo","four","cuillère","fourchette","couteau","assiette","verre d'eau","lunettes","chapeau","écharpe","manteau","chaussures","valise","sac à dos","portefeuille",
+"piscine","tennis","basket","natation","boxe","ski","surf","danse","guitare","piano","tambour","trompette","micro","télévision","radio","appareil photo","jeu vidéo","livre","stylo","ciseaux",
+"boulangerie","pharmacie","hôpital","école","bibliothèque","supermarché","gare","métro","autoroute","pompier","policier","médecin","cuisinier","coiffeur","facteur","pilote","astronaute","pirate","sorcière","dragon",
+"fantôme","robot","princesse","clown","joyeux Noël","bonne année","félicitations","bienvenue","à bientôt","bonne chance","santé","excuse-moi","s'il te plaît","de rien","bravo","bonne journée","à tout à l'heure","ça va",
+"tempête","orage","neige","arc-en-ciel","volcan","désert","forêt","rivière","île","étoile","planète","fusée","nuage","tonnerre","glaçon","bougie","cadeau","ballon de foot","tour Eiffel","parachute"],
+difficile:["j'ai faim","tu as vu","où est mon portable","il fait froid","passe-moi le sel","j'ai oublié les clés","c'est une blague","pas du tout","qu'est-ce que tu fais","on va être en retard","je suis fatigué","c'est pas moi","attention derrière toi","tu veux un café","il pleut des cordes","ça m'est égal","trop bien","pas mal du tout","quelle heure est-il",
+"j'ai soif","j'ai chaud","j'ai mal à la tête","j'ai besoin de dormir","je n'ai rien compris","répète s'il te plaît","parle plus fort","tu me manques","je suis content de te voir","on se voit demain","qu'est-ce qu'on mange ce soir","j'ai envie de pizza","tu as de la monnaie","où sont mes lunettes","ferme la porte","éteins la lumière","allume la télé","baisse le son","passe-moi la télécommande",
+"je t'appelle plus tard","tu m'entends","le réseau est nul","mon téléphone n'a plus de batterie","envoie-moi la photo","j'ai vu un film hier","c'était vraiment drôle","je ne le crois pas","tu plaisantes","c'est incroyable","pas possible","mais bien sûr","j'en ai marre","j'ai trop mangé","c'est délicieux","il manque du sel","la note s'il vous plaît","une table pour deux","qu'est-ce que vous me conseillez","je voudrais un café",
+"où sont les toilettes","je suis perdu","tournez à gauche","c'est tout droit","à quelle heure part le train","j'ai raté mon bus","il y a du monde","c'est trop cher","c'est combien","vous prenez la carte","j'ai gagné","tu as perdu","c'est mon tour","à toi de jouer","ne regarde pas","je triche pas","rejouons une partie","ça ne vaut pas",
+"il fait beau aujourd'hui","il va neiger","quel temps pourri","j'adore l'été","prends ton parapluie","mets ton manteau","on va à la plage","regarde la lune","j'ai vu une étoile filante","le soleil se couche",
+"tu as bien dormi","je me lève","j'ai oublié mon sac","je suis en retard","dépêche-toi","attends-moi","ne t'inquiète pas","tout va bien","c'est pas grave","je m'en occupe","laisse-moi faire","j'ai une idée","bonne idée","on se retrouve où","je passe te chercher","j'arrive dans cinq minutes",
+"tu as fini tes devoirs","j'ai un examen demain","le prof est sympa","c'est quoi la réponse","je révise ce soir","j'ai eu une bonne note","la réunion est annulée","j'ai un rendez-vous","je travaille de chez moi","bon courage",
+"mon chat dort sur le canapé","le chien aboie","j'ai promené le chien","il a mangé mes chaussettes","le bébé pleure","les enfants jouent","la voisine est gentille",
+"j'ai acheté du pain","il faut faire les courses","on n'a plus de lait","j'ai fait des crêpes","c'est l'heure de l'apéro","à table","qui veut du dessert","je reprendrais du fromage","encore un peu de vin","trinquons","à la tienne",
+"je t'aime beaucoup","tu es drôle","t'es bête","quel beau sourire","tu es magnifique","tu as changé de coiffure","ça te va bien","c'est ton style","j'adore ta robe",
+"je vais bien merci","et toi","enchanté","ravi de te rencontrer","comment tu t'appelles","tu habites où","tu fais quoi dans la vie","c'est un secret","promis juré","je te le jure","c'est faux","c'est vrai","peut-être","jamais de la vie","bien sûr que oui","absolument pas","ça dépend","on verra bien",
+"c'est la fête","joyeux anniversaire","souffle les bougies","fais un vœu","aïe ça fait mal","j'ai le hoquet","à tes souhaits","j'ai peur","c'est un cauchemar","j'ai fait un rêve","c'est trop tard","laisse tomber"]
+};
+const DEF={lvl:"facile",tmr:0,hap:1};
+let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem("levres2")||"{}"))}catch(e){S={...DEF}}
+if(!WORDS[S.lvl])S.lvl="facile";
+const save=()=>{try{localStorage.setItem("levres2",JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const COLORS=["#2B3FE0","#E0356B","#0E9F6E","#F26B1D","#7B3FE4","#0891B2","#C2410C","#BE185D"];
+let deck=[],t=null,left=0,over=false,ci=0,last="";
+
+function haptic(){
+  if(!S.hap)return;
+  try{ if(navigator.vibrate){navigator.vibrate(15);return} $("hl").click(); }catch(e){}
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function recolor(){
+  ci=(ci+1+Math.floor(Math.random()*(COLORS.length-1)))%COLORS.length;
+  document.body.style.backgroundColor=COLORS[ci];
+  $("tc").setAttribute("content",COLORS[ci]);
+}
+function show(w){
+  const el=$("word");el.innerHTML="";
+  let i=0;
+  w.split(" ").forEach((part,k,arr)=>{
+    const wrap=document.createElement("span");wrap.className="w";
+    [...part].forEach(ch=>{const c=document.createElement("span");c.className="c";c.textContent=ch;c.style.setProperty("--i",i++);wrap.appendChild(c)});
+    el.appendChild(wrap);
+    if(k<arr.length-1)el.appendChild(document.createTextNode(" "));
+  });
+  const n=w.length;
+  el.style.fontSize=(n>14?14*0.6:n>8?14*0.78:14)+"vw";
+}
+function next(){
+  if(!deck.length){deck=shuffle([...WORDS[S.lvl]]);if(deck[deck.length-1]===last)deck.reverse()}
+  last=deck.pop();
+  show(last);recolor();
+}
+function startTimer(){
+  clearInterval(t);over=false;
+  $("end").classList.remove("show");$("word").style.display="";
+  $("timer").className="";
+  if(!S.tmr){$("timer").textContent="";return}
+  left=S.tmr;draw();
+  t=setInterval(()=>{
+    left--;draw();
+    if(left<=5&&left>0)$("timer").className="hot";
+    if(left<=0){
+      clearInterval(t);over=true;$("timer").className="";
+      $("word").style.display="none";$("end").classList.add("show");
+      haptic();setTimeout(haptic,150);
+    }
+  },1000);
+}
+function draw(){$("timer").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}
+function newGame(){deck=[];startTimer();next()}
+
+$("stage").addEventListener("click",e=>{
+  const r=document.createElement("div");r.className="ripple";
+  r.style.left=e.clientX+"px";r.style.top=e.clientY+"px";
+  r.addEventListener("animationend",()=>r.remove());
+  document.body.appendChild(r);
+  haptic();
+  if(over){newGame();return}
+  next();
+});
+$("gear").addEventListener("click",e=>{
+  e.stopPropagation();haptic();
+  $("gear").animate([{transform:"rotate(0)"},{transform:"rotate(180deg)"}],{duration:400,easing:"ease-out"});
+  clearInterval(t);$("panel").classList.add("open");
+});
+$("done").addEventListener("click",()=>{haptic();$("panel").classList.remove("open");newGame()});
+
+function seg(id,opts,key){
+  const box=$(id);box.innerHTML="";
+  opts.forEach(([label,val])=>{
+    const b=document.createElement("button");b.textContent=label;
+    if(S[key]===val)b.className="on";
+    b.onclick=()=>{S[key]=val;save();haptic();seg(id,opts,key)};
+    box.appendChild(b);
+  });
+}
+seg("lvl",[["Facile","facile"],["Difficile","difficile"]],"lvl");
+seg("tmr",[["Sans",0],["30 s",30],["60 s",60],["90 s",90]],"tmr");
+seg("hap",[["Oui",1],["Non",0]],"hap");
+newGame();
+</script>
+</body>
+</html>
